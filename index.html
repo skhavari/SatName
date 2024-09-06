@@ -7,9 +7,10 @@
         <style>
             body {
                 font-family: Arial, sans-serif;
-                max-width: 90%;
                 margin: 0 auto;
                 padding: 20px;
+                max-width: 100%;
+                box-sizing: border-box;
             }
             .container {
                 display: flex;
@@ -32,22 +33,24 @@
                 margin-bottom: 10px;
                 font-size: 14px;
             }
+            .image-wrapper {
+                width: 100%;
+                display: flex;
+                justify-content: flex-start; /* Align images to the left */
+                overflow: hidden;
+            }
             .image-container {
                 display: flex;
-                flex-wrap: wrap;
-                gap: 10px; /* This is the spacing between images */
-                justify-content: center;
+                gap: 10px;
+                justify-content: flex-start; /* Align images to the left */
+                width: 90%; /* Make images take up 90% of the available width */
+                transition: all 0.2s ease;
             }
             .image-container img {
+                width: calc(90% / 26 - 10px); /* Dynamically calculate width based on number of images */
                 height: auto;
-                object-fit: cover;
-                cursor: pointer;
-                max-width: 100%;
-                flex-grow: 1;
-                transition: transform 0.2s ease;
-            }
-            .image-container img:hover {
-                transform: scale(1.05);
+                object-fit: contain;
+                max-height: 70vh; /* Ensure images never exceed 70% of the viewport height */
             }
             #downloadBtn {
                 margin-top: 20px;
@@ -58,11 +61,13 @@
     <body>
         <h1>Your Name in Satellite Imagery</h1>
         <form id="nameForm" class="container" aria-label="Form to enter name and generate satellite imagery">
-            <input type="text" id="nameInput" placeholder="Enter your name" aria-label="Name input" maxlength="25" />
+            <input type="text" id="nameInput" placeholder="Enter your name" aria-label="Name input" maxlength="26" />
             <button type="submit" id="generateBtn" aria-label="Generate satellite images for name">Generate</button>
         </form>
         <div id="error" class="error" role="alert"></div>
-        <div id="imageContainer" class="image-container"></div>
+        <div class="image-wrapper">
+            <div id="imageContainer" class="image-container"></div>
+        </div>
         <button id="downloadBtn">Download Final Image</button>
         <canvas id="canvas" style="display: none"></canvas>
 
@@ -120,8 +125,8 @@
 
             function validateName(input) {
                 const trimmedInput = input.trim();
-                if (trimmedInput.length > 25) {
-                    showError('Name must be 25 characters or less.');
+                if (trimmedInput.length > 26) {
+                    showError('Name must be 26 characters or less.');
                     return false;
                 }
                 if (!/^[a-zA-Z]+$/.test(trimmedInput)) {
@@ -173,7 +178,9 @@
 
             function renderImages() {
                 imageContainer.innerHTML = '';
-                const imageWidth = Math.floor(90 / Math.min(displayName.length, 10)) + '%';
+                const nameLength = displayName.length;
+                const imageWidth = `calc(90% / ${nameLength} - 10px)`; // Adjust image size based on the number of images
+
                 displayName.split('').forEach((letter, index) => {
                     const img = document.createElement('img');
                     img.src = getImageUrl(letter, letterIndices[index]);
