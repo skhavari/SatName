@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Your Name in Satellite Imagery</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                max-width: 90%;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .container {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 20px;
+                align-items: center;
+            }
+            input {
+                flex-grow: 1;
+                padding: 8px;
+                font-size: 16px;
+            }
+            button {
+                padding: 8px 12px;
+                font-size: 16px;
+                cursor: pointer;
+            }
+            .error {
+                color: red;
+                margin-bottom: 10px;
+                font-size: 14px;
+            }
+            .image-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                justify-content: center;
+            }
+            .image-container img {
+                height: auto;
+                object-fit: cover;
+                cursor: pointer;
+                max-width: 100%;
+                flex-grow: 1;
+                transition: transform 0.2s ease;
+            }
+            .image-container img:hover {
+                transform: scale(1.05);
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Your Name in Satellite Imagery</h1>
+        <form id="nameForm" class="container" aria-label="Form to enter name and generate satellite imagery">
+            <input type="text" id="nameInput" placeholder="Enter your name" aria-label="Name input" maxlength="25" />
+            <button type="submit" id="generateBtn" aria-label="Generate satellite images for name">Generate</button>
+        </form>
+        <div id="error" class="error" role="alert"></div>
+        <div id="imageContainer" class="image-container"></div>
+
+        <script>
+            const lastIndex = [3, 1, 2, 1, 3, 1, 0, 1, 4, 2, 1, 3, 2, 2, 1, 1, 1, 3, 2, 1, 1, 3, 1, 2, 1, 1];
+            const baseUrl = '/i/';
+
+            const nameInput = document.getElementById('nameInput');
+            const generateBtn = document.getElementById('generateBtn');
+            const errorDiv = document.getElementById('error');
+            const imageContainer = document.getElementById('imageContainer');
+            const nameForm = document.getElementById('nameForm');
+
+            let displayName = '';
+            let letterIndices = [];
+
+            const prohibitedWords = [
+                'fuck',
+                'fucking',
+                'fucker',
+                'motherfucker',
+                'mf',
+                'wtf',
+                'af',
+                'bullshit',
+                'bs',
+                'shit',
+                'shitty',
+                'crap',
+                'bitch',
+                'bitches',
+                'slut',
+                'whore',
+                'bastard',
+                'asshole',
+                'ass',
+                'cunt',
+                'dick',
+                'dicks',
+                'cock',
+                'cocksucker',
+                'pussy',
+                'wanker',
+                'prick',
+                'piss',
+                'tits',
+                'tit',
+                'goddamn',
+                'damn',
+                'hell',
+                'douche',
+                'douchebag',
+                'freakin',
+                'nigger',
+                'nigga',
+                'spic',
+                'chink',
+                'gook',
+                'kike',
+                'fag',
+                'faggot',
+                'dyke',
+                'retard',
+                'retarded',
+                'arsehole',
+                'twat',
+            ];
+
+            function getImageUrl(letter, index) {
+                return `${baseUrl}${letter.toLowerCase()}_${index}.jpg`;
+            }
+
+            function validateName(input) {
+                const trimmedInput = input.trim();
+                if (trimmedInput.length > 25) {
+                    showError('Name must be 25 characters or less.');
+                    return false;
+                }
+                if (!/^[a-zA-Z]+$/.test(trimmedInput)) {
+                    showError('Name must contain only letters.');
+                    return false;
+                }
+                if (containsProhibitedWord(trimmedInput)) {
+                    showError('Profanity not permitted.  Enter an appropriate name.');
+                    return false;
+                }
+                clearError();
+                return true;
+            }
+
+            function containsProhibitedWord(input) {
+                return prohibitedWords.some((word) => input.toLowerCase().includes(word));
+            }
+
+            function showError(message) {
+                errorDiv.textContent = message;
+            }
+
+            function clearError() {
+                errorDiv.textContent = '';
+            }
+
+            function generateName(event) {
+                event.preventDefault();
+                const name = nameInput.value.trim().toUpperCase();
+                if (validateName(name)) {
+                    displayName = name;
+                    letterIndices = new Array(name.length).fill(0);
+                    renderImages();
+                }
+            }
+
+            function cycleLetterVariant(index) {
+                const letterCode = displayName.charCodeAt(index) - 65;
+                letterIndices[index] = (letterIndices[index] + 1) % (lastIndex[letterCode] + 1);
+                updateImage(index);
+            }
+
+            function updateImage(index) {
+                const img = imageContainer.children[index];
+                const letter = displayName[index];
+                img.src = getImageUrl(letter, letterIndices[index]);
+            }
+
+            function renderImages() {
+                imageContainer.innerHTML = '';
+                const imageWidth = Math.floor(90 / Math.min(displayName.length, 10)) + '%';
+                displayName.split('').forEach((letter, index) => {
+                    const img = document.createElement('img');
+                    img.src = getImageUrl(letter, letterIndices[index]);
+                    img.alt = `${letter} from satellite imagery`;
+                    img.style.width = imageWidth;
+                    img.onclick = () => cycleLetterVariant(index);
+                    imageContainer.appendChild(img);
+                });
+            }
+
+            nameForm.addEventListener('submit', generateName);
+        </script>
+    </body>
+</html>
